@@ -23,8 +23,8 @@ export OPENAI_API_KEY="API_KEY"
 or you can create a `.env` (dotenv) config file and pass in the file path when initializing the Embeddings class:
 
 ```node
-from refiner.embeddings import Embeddings
-embeddings_client = Embeddings(config_file="/path/to/.env")
+import { Embeddings } from "@ai-refiner/refiner-js";
+embeddings_client = Embeddings((config_file = "/path/to/.env"));
 ```
 
 Your .env file should follow key/value format:
@@ -46,7 +46,7 @@ embeddings.create({ id: "2", text: "hello" }, "test-index");
 ## Semantic Search
 
 ```node
-const embeddings = Embeddings((config_file = "/path/to/.env"));
+const embeddings = Embeddings("/path/to/.env");
 const limit = 10;
 embeddings.search("hello", "test-index", limit);
 // {'matches': [...]}

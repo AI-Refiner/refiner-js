@@ -46,7 +46,7 @@ embeddings.create({ id: "2", text: "hello" }, "test-index");
 ## Semantic Search
 
 ```node
-const embeddings = Embeddings("/path/to/.env");
+const embeddings = new Embeddings("/path/to/.env");
 const limit = 10;
 embeddings.search("hello", "test-index", limit);
 // {'matches': [...]}

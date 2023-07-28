@@ -5,7 +5,7 @@ About The Refiner Javascript package can be used to convert and store text and m
 ## Installation
 
 ```shell
-npm install refiner-js
+npm install @ai-refiner/refiner-js
 ```
 
 ## OpenAI and Pinecone API Keys.

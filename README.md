@@ -24,7 +24,7 @@ or you can create a `.env` (dotenv) config file and pass in the file path when i
 
 ```node
 import { Embeddings } from "@ai-refiner/refiner-js";
-const embeddings = Embeddings("/path/to/.env");
+const embeddings = new Embeddings("/path/to/.env");
 ```
 
 Your .env file should follow key/value format:

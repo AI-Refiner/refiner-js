@@ -6,12 +6,12 @@ export class RefinerOpenAIClient {
     this.openai = new OpenAIApi(configuration);
   }
 
-  async createEmbeddings(text) {
+  async createEmbeddings(payload) {
     const response = await this.openai.createEmbedding({
       model: "text-embedding-ada-002",
-      input: text,
+      input: payload,
     });
 
-    return response;
+    return response.data.data[0].embedding;
   }
 }

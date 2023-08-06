@@ -1,6 +1,7 @@
+import * as dotenv from "dotenv";
+import { v4 as uuidv4 } from "uuid";
 import { RefinerOpenAIClient } from "./integrations/refinerOpenAI.js";
 import { RefinerPineconeClient } from "./integrations/refinerPinecone.js";
-import * as dotenv from "dotenv";
 
 export class Embeddings {
   // Refiner class for creating, searching, updating, and deleting AI embeddings.
@@ -47,7 +48,12 @@ export class Embeddings {
     // Validate the payload.
     if (!payload.text) {
       return {
-        error: "Payload is missing text.",
+        error: "Payload must contain a text attribute",
+      };
+    }
+    if (!Array.isArray(payload.text) && typeof payload.text !== "string") {
+      return {
+        error: "Text must be a string or an array of strings.",
       };
     }
 
@@ -62,6 +68,7 @@ export class Embeddings {
   async create(
     payload,
     indexName,
+    dimension = this.openaiADA200DefaultDimension,
     namespace = null,
     batchSize = null,
     poolThreads = null
@@ -77,11 +84,8 @@ export class Embeddings {
     }
 
     const openaiClient = new RefinerOpenAIClient(this.__openaiApiKey);
+
     const embeddings = await openaiClient.createEmbeddings(payload.text);
-    const vector = {
-      id: payload.id,
-      values: embeddings.data.data[0].embedding,
-    };
 
     const pineconeClient = new RefinerPineconeClient(
       this.__pineconeApiKey,
@@ -93,30 +97,38 @@ export class Embeddings {
     // only create index if it doesn't exist
     const indexes = await pineconeClient.client.listIndexes();
     if (!indexes.includes(indexName)) {
-      // create index
       console.log(`creating index: ${indexName}`);
       const createRequest = {
         name: indexName,
-        dimension: this.openaiADA200DefaultDimension,
-        metric: "euclidean",
+        dimension: dimension,
+        metric: "cosine",
       };
       const createResponse = await pineconeClient.client.createIndex({
         createRequest,
       });
       console.log(createResponse);
+      console.log(
+        "Index is being created... Please wait 30 seconds before trying to store embeddings."
+      );
+      return;
     }
+
+    const vector = {
+      id: payload.id || uuidv4(),
+      values: embeddings,
+      metadata: payload.metadata || null,
+    };
 
     const stored = await pineconeClient.storeEmbeddings(
       vector,
       indexName,
-      this.openaiADA200DefaultDimension,
       namespace,
       batchSize,
       poolThreads
     );
-    console.log(stored);
+    console.log(vector.id, stored);
 
-    return stored;
+    return vector.id, stored;
   }
 
   async search(query, indexId, limit, namespace = null) {
@@ -134,9 +146,8 @@ export class Embeddings {
 
     const openaiClient = new RefinerOpenAIClient(this.__openaiApiKey);
     const embeddings = await openaiClient.createEmbeddings(query);
-
     const results = await pineconeClient.search(
-      embeddings.data.data[0].embedding,
+      embeddings,
       indexId,
       limit,
       namespace

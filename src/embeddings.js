@@ -1,5 +1,5 @@
 import * as dotenv from "dotenv";
-import { v4 as uuidv4 } from "uuid";
+import tiktoken from "tiktoken";
 import { RefinerOpenAIClient } from "./integrations/refinerOpenAI.js";
 import { RefinerPineconeClient } from "./integrations/refinerPinecone.js";
 
@@ -44,7 +44,7 @@ export class Embeddings {
     }
   }
 
-  __validatePayload(payload) {
+  async __validatePayload(payload) {
     // Validate the payload.
     if (!payload.text) {
       return {
@@ -63,6 +63,31 @@ export class Embeddings {
         error: "Payload metadata must be an object.",
       };
     }
+
+    const text = Array.isArray(payload.text) ? payload.text : [payload.text];
+    const tokenAmount = await this.countTokensForArray(text);
+
+    if (tokenAmount > 8191) {
+      return {
+        error:
+          "Payload must contain less than 8191 tokens. Try splitting your text into smaller chunks.",
+      };
+    }
+  }
+
+  async countTokensForArray(textArray) {
+    try {
+      let tokenCounts = 0;
+      let encoding = tiktoken.encoding_for_model("gpt-3.5-turbo");
+      for (const text of textArray) {
+        let result = await encoding.encode(text).length;
+        tokenCounts += result;
+      }
+      return tokenCounts;
+    } catch (error) {
+      console.error("Error counting tokens:", error);
+      return 0;
+    }
   }
 
   async create(
@@ -70,7 +95,6 @@ export class Embeddings {
     indexName,
     dimension = this.openaiADA200DefaultDimension,
     namespace = null,
-    batchSize = null,
     poolThreads = null
   ) {
     const validatedEnv = this.__validateEnv();
@@ -78,7 +102,7 @@ export class Embeddings {
       return validatedEnv;
     }
 
-    const validatedPayload = this.__validatePayload(payload);
+    const validatedPayload = await this.__validatePayload(payload);
     if (validatedPayload && "error" in validatedPayload) {
       return validatedPayload;
     }
@@ -91,20 +115,13 @@ export class Embeddings {
     await pineconeClient.init();
 
     // check if index exists and create if it doesn't
-    // also check if dimension is the same as the index
-    // if not, create a new index with the new dimension.
     const indexes = await pineconeClient.client.listIndexes();
-    let _dimension = dimension;
-
-    if (batchSize && batchSize !== dimension) {
-      _dimension = batchSize;
-    }
 
     if (!indexes.includes(indexName)) {
       console.log(`creating index: ${indexName}`);
       const createRequest = {
         name: indexName,
-        dimension: _dimension,
+        dimension: dimension,
         metric: "cosine",
       };
       const createResponse = await pineconeClient.client.createIndex({
@@ -131,7 +148,6 @@ export class Embeddings {
       vector,
       indexName,
       namespace,
-      batchSize,
       poolThreads
     );
 

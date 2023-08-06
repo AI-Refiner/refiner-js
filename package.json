@@ -1,7 +1,7 @@
 {
   "type": "module",
   "name": "@ai-refiner/refiner-js",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "The Refiner Javascript package can be used to convert and store text and metadata as vector embeddings. Embeddings are generated using OpenAI and stored as vectors in Pinecone. Stored embeddings can then be \"queried\" using the search method. Matched embeddings contain contextually relevant metadata.",
   "main": "src/index.js",
   "scripts": {
@@ -21,6 +21,7 @@
     "@pinecone-database/pinecone": "^0.1.6",
     "dotenv": "^16.3.1",
     "openai": "^3.3.0",
+    "tiktoken": "^1.0.10",
     "uuid": "^9.0.0"
   }
 }

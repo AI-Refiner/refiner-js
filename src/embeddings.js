@@ -70,6 +70,7 @@ export class Embeddings {
     indexName,
     dimension = this.openaiADA200DefaultDimension,
     namespace = null,
+    batchSize = null,
     poolThreads = null
   ) {
     const validatedEnv = this.__validateEnv();
@@ -82,10 +83,6 @@ export class Embeddings {
       return validatedPayload;
     }
 
-    const openaiClient = new RefinerOpenAIClient(this.__openaiApiKey);
-
-    const embeddings = await openaiClient.createEmbeddings(payload.text);
-
     const pineconeClient = new RefinerPineconeClient(
       this.__pineconeApiKey,
       this.pineconeEnvironmentName
@@ -93,13 +90,21 @@ export class Embeddings {
 
     await pineconeClient.init();
 
-    // only create index if it doesn't exist
+    // check if index exists and create if it doesn't
+    // also check if dimension is the same as the index
+    // if not, create a new index with the new dimension.
     const indexes = await pineconeClient.client.listIndexes();
+    let _dimension = dimension;
+
+    if (batchSize && batchSize !== dimension) {
+      _dimension = batchSize;
+    }
+
     if (!indexes.includes(indexName)) {
       console.log(`creating index: ${indexName}`);
       const createRequest = {
         name: indexName,
-        dimension: dimension,
+        dimension: _dimension,
         metric: "cosine",
       };
       const createResponse = await pineconeClient.client.createIndex({
@@ -109,8 +114,12 @@ export class Embeddings {
       console.log(
         "Index is being created... Please wait 30 seconds before trying to store embeddings."
       );
-      return;
+      return true;
     }
+
+    const openaiClient = new RefinerOpenAIClient(this.__openaiApiKey);
+
+    const embeddings = await openaiClient.createEmbeddings(payload.text);
 
     const vector = {
       id: payload.id || uuidv4(),
@@ -122,6 +131,7 @@ export class Embeddings {
       vector,
       indexName,
       namespace,
+      batchSize,
       poolThreads
     );
 

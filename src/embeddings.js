@@ -70,7 +70,6 @@ export class Embeddings {
     indexName,
     dimension = this.openaiADA200DefaultDimension,
     namespace = null,
-    batchSize = null,
     poolThreads = null
   ) {
     const validatedEnv = this.__validateEnv();
@@ -123,10 +122,8 @@ export class Embeddings {
       vector,
       indexName,
       namespace,
-      batchSize,
       poolThreads
     );
-    console.log(vector.id, stored);
 
     return vector.id, stored;
   }
@@ -153,7 +150,6 @@ export class Embeddings {
       namespace
     );
 
-    console.log(results);
     return results;
   }
 }

@@ -28,7 +28,7 @@ export class RefinerPineconeClient {
     });
 
     const upsertRequest = {
-      vectors: [vectors],
+      vectors: vectors,
       namespace: namespace,
     };
 
@@ -46,7 +46,7 @@ export class RefinerPineconeClient {
       topK: limit,
       vector: [vectors],
       namespace: namespace,
-      includeValues: true,
+      includeValues: false,
       includeMetadata: true,
     };
 

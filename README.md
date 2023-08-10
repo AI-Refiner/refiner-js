@@ -39,7 +39,8 @@ OPENAI_API_KEY="API_KEY"
 
 ```node
 const embeddings = new Embeddings("/path/to/.env");
-embeddings.create({ id: "2", text: "hello" }, "test-index");
+const item = [{ id: "2", text: "hello" }];
+embeddings.create(item, "test-index");
 // {'upserted_count': 1}
 ```
 
@@ -50,6 +51,105 @@ const embeddings = new Embeddings("/path/to/.env");
 const limit = 10;
 embeddings.search("hello", "test-index", limit);
 // {'matches': [...]}
+```
+
+## Loaders
+
+```node
+// Get web page content from a URL and create a document.
+const embeddings = new Embeddings("/path/to/.env");
+let loaders = new Loaders();
+let data = await loaders.getDocumentFromUrl("https://news.yahoo.com/");
+// [
+//  Document {
+//    pageContent:
+```
+
+## Transformers
+
+```node
+// Split the document text and create embeddings
+const embeddings = new Embeddings("/path/to/.env");
+let transformers = new Transformers();
+let texts = await transformers.splitText(data);
+let vectors = [];
+texts.map(async (item, index) => {
+    // remove loc from metadata. It's not needed and throws a PineconeError when used.
+    if ("loc" in item.metadata) delete item.metadata.loc;
+
+    let vector = {
+        id: `id-${index}`,
+        text: item.pageContent,
+        metadata: { ...item.metadata, pageContent: item.pageContent },
+    };
+
+    vectors.push(vector);
+});
+const created = await embeddings.create(vectors, "test-index");
+// { upsertedCount: 251 }
+...
+```
+
+## Document Chatbot Example
+
+```node
+// Ask the document questions. Format a Q/A style prompt.
+// Stream the completion results
+const question = "What are the headlines of todays news?";
+
+let results = await embeddings.search(question, "test-index", 10);
+const openaiClient = new RefinerOpenAIClient("OPENAI_API_KEY");
+
+const document = results.matches.map((m) => m.metadata.pageContent).join("\n");
+
+const prompt = `
+  Q: ${question}\n
+  Using this document answer the question as a friendly chatbot that knows about the details in the document.
+  You can answer questions only with the information in the documents you've been trained on.
+  ${document}\n
+  A:
+  `;
+
+const payload = {
+  model: "gpt-3.5-turbo",
+  messages: [
+    {
+      role: "user",
+      content: prompt,
+    },
+  ],
+  stream: true,
+};
+
+const stream = await openaiClient.createCompletion(payload);
+
+stream.on("data", (chunk) => {
+  const payloads = chunk.toString().split("\n\n");
+  for (const payload of payloads) {
+    if (payload.includes("[DONE]")) return;
+    if (payload.startsWith("data:")) {
+      const data = JSON.parse(payload.replace("data: ", ""));
+      try {
+        const chunk = data.choices[0].delta?.content;
+        if (chunk) {
+          console.log(chunk);
+        }
+      } catch (error) {
+        console.log(`Error with JSON.parse and ${payload}.\n${error}`);
+      }
+    }
+  }
+});
+
+stream.on("end", () => {
+  setTimeout(() => {
+    console.log("\n");
+  }, 10);
+});
+
+stream.on("error", (err) => {
+  console.log(err);
+});
 ```
 
 ## CLI

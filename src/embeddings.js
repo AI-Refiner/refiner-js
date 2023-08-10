@@ -1,5 +1,4 @@
 import * as dotenv from "dotenv";
-import tiktoken from "tiktoken";
 import { RefinerOpenAIClient } from "./integrations/refinerOpenAI.js";
 import { RefinerPineconeClient } from "./integrations/refinerPinecone.js";
 
@@ -45,48 +44,17 @@ export class Embeddings {
   }
 
   async __validatePayload(payload) {
-    // Validate the payload.
-    if (!payload.text) {
+    // Validate the payload is an array of objects with text
+    if (!Array.isArray(payload)) {
       return {
-        error: "Payload must contain a text attribute",
-      };
-    }
-    if (!Array.isArray(payload.text) && typeof payload.text !== "string") {
-      return {
-        error: "Text must be a string or an array of strings.",
+        error: "Payload must be an array.",
       };
     }
 
-    // check is metadata is an object
-    if (payload.metadata && typeof payload.metadata !== "object") {
+    if (payload.length === 0) {
       return {
-        error: "Payload metadata must be an object.",
+        error: "Payload must contain at least one item.",
       };
-    }
-
-    const text = Array.isArray(payload.text) ? payload.text : [payload.text];
-    const tokenAmount = await this.countTokensForArray(text);
-
-    if (tokenAmount > 8191) {
-      return {
-        error:
-          "Payload must contain less than 8191 tokens. Try splitting your text into smaller chunks.",
-      };
-    }
-  }
-
-  async countTokensForArray(textArray) {
-    try {
-      let tokenCounts = 0;
-      let encoding = tiktoken.encoding_for_model("gpt-3.5-turbo");
-      for (const text of textArray) {
-        let result = await encoding.encode(text).length;
-        tokenCounts += result;
-      }
-      return tokenCounts;
-    } catch (error) {
-      console.error("Error counting tokens:", error);
-      return 0;
     }
   }
 
@@ -136,22 +104,29 @@ export class Embeddings {
 
     const openaiClient = new RefinerOpenAIClient(this.__openaiApiKey);
 
-    const embeddings = await openaiClient.createEmbeddings(payload.text);
+    let embeddings;
 
-    const vector = {
-      id: payload.id || uuidv4(),
-      values: embeddings,
-      metadata: payload.metadata || null,
-    };
+    let vectors = [];
+
+    const promises = payload.map(async (item) => {
+      embeddings = await openaiClient.createEmbeddings(item.text);
+      vectors.push({
+        id: item.id || uuidv4(),
+        values: embeddings,
+        metadata: item.metadata,
+      });
+    });
+
+    await Promise.all(promises);
 
     const stored = await pineconeClient.storeEmbeddings(
-      vector,
+      vectors,
       indexName,
       namespace,
       poolThreads
     );
 
-    return vector.id, stored;
+    return vectors, stored;
   }
 
   async search(query, indexId, limit, namespace = null) {

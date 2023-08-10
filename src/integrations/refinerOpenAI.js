@@ -14,4 +14,14 @@ export class RefinerOpenAIClient {
 
     return response.data.data[0].embedding;
   }
+
+  async createCompletion(payload) {
+    const completion = await this.openai.createChatCompletion(payload, {
+      responseType: "stream",
+    });
+
+    const stream = completion.data;
+
+    return stream;
+  }
 }

@@ -53,14 +53,23 @@ embeddings.search("hello", "test-index", limit);
 // {'matches': [...]}
 ```
 
-## Loaders
+## Loaders - getDocumentFromURL
 
 ```node
 // Get web page content from a URL and create a document.
-const embeddings = new Embeddings("/path/to/.env");
 let loaders = new Loaders();
-let data = await loaders.getDocumentFromUrl("https://news.yahoo.com/");
+let data = await loaders.getDocumentFromURL("https://news.yahoo.com/");
 // [
+//  Document {
+//    pageContent:
+```
+
+## Loaders - getDocumentFromPDF
+
+```node
+// Get web page content from a PDF filepath or blob and create a document.
+let path = "/path/to/PDF/example.pdf";
+let d = await loader.getDocumentFromPDF(path);
 //  Document {
 //    pageContent:
 ```

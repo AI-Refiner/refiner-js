@@ -69,7 +69,7 @@ let data = await loaders.getDocumentFromURL("https://news.yahoo.com/");
 ```node
 // Get web page content from a PDF filepath or blob and create a document.
 let path = "/path/to/PDF/example.pdf";
-let d = await loader.getDocumentFromPDF(path);
+let data = await loader.getDocumentFromPDF(path);
 //  Document {
 //    pageContent:
 ```

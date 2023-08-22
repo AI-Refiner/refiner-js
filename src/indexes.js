@@ -45,7 +45,7 @@ export class Indexes {
     //
   }
 
-  async createIndex(indexName, dimension = this.openaiADA200DefaultDimension) {
+  async create(indexName, dimension = this.openaiADA200DefaultDimension) {
     const pineconeClient = new RefinerPineconeClient(
       this.__pineconeApiKey,
       this.pineconeEnvironmentName

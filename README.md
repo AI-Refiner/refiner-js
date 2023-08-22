@@ -35,6 +35,17 @@ PINECONE_ENVIRONMENT_NAME="ENV_NAME"
 OPENAI_API_KEY="API_KEY"
 ```
 
+## Create Index
+
+```node
+const indexes = new Indexes("./.env");
+const index = await indexes.createIndex("new-index");
+// creating index: new-index
+
+// Index is being created... Please wait 30 seconds before trying to store embeddings.
+// { success: true }
+```
+
 ## Create Embeddings
 
 ```node

@@ -1,6 +1,7 @@
 import * as dotenv from "dotenv";
 import { RefinerOpenAIClient } from "./integrations/refinerOpenAI.js";
 import { RefinerPineconeClient } from "./integrations/refinerPinecone.js";
+import { Indexes } from "./indexes.js";
 
 export class Embeddings {
   // Refiner class for creating, searching, updating, and deleting AI embeddings.
@@ -58,13 +59,7 @@ export class Embeddings {
     }
   }
 
-  async create(
-    payload,
-    indexName,
-    dimension = this.openaiADA200DefaultDimension,
-    namespace = null,
-    poolThreads = null
-  ) {
+  async create(payload, indexName, namespace = null, poolThreads = null) {
     const validatedEnv = this.__validateEnv();
     if (validatedEnv && "error" in validatedEnv) {
       return validatedEnv;
@@ -81,26 +76,6 @@ export class Embeddings {
     );
 
     await pineconeClient.init();
-
-    // check if index exists and create if it doesn't
-    const indexes = await pineconeClient.client.listIndexes();
-
-    if (!indexes.includes(indexName)) {
-      console.log(`creating index: ${indexName}`);
-      const createRequest = {
-        name: indexName,
-        dimension: dimension,
-        metric: "cosine",
-      };
-      const createResponse = await pineconeClient.client.createIndex({
-        createRequest,
-      });
-      console.log(createResponse);
-      console.log(
-        "Index is being created... Please wait 30 seconds before trying to store embeddings."
-      );
-      return true;
-    }
 
     const openaiClient = new RefinerOpenAIClient(this.__openaiApiKey);
 

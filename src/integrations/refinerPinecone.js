@@ -17,6 +17,16 @@ export class RefinerPineconeClient {
     });
   }
 
+  async createIndex(indexId, dimension = 1024) {
+    const index = await this.client.createIndex({
+      createRequest: {
+        name: indexId,
+        dimension: dimension,
+      },
+    });
+    return index;
+  }
+
   async storeEmbeddings(
     vectors,
     indexId,

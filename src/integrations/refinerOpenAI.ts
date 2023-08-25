@@ -1,4 +1,4 @@
-import { Configuration, OpenAIApi } from "openai";
+import { Configuration, CreateChatCompletionRequest, OpenAIApi } from "openai";
 
 export class RefinerOpenAIClient {
   openai: OpenAIApi;
@@ -16,7 +16,7 @@ export class RefinerOpenAIClient {
     return response.data.data[0].embedding;
   }
 
-  async createCompletion(payload) {
+  async createCompletion(payload: CreateChatCompletionRequest) {
     const completion = await this.openai.createChatCompletion(payload, {
       responseType: "stream",
     });

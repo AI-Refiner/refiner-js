@@ -2,11 +2,9 @@
   "name": "@ai-refiner/refiner-js",
   "version": "0.2.5",
   "description": "The Refiner package can be used to load and store text and metadata as vector embeddings. Embeddings are generated using OpenAI and stored as vectors in Pinecone. Stored embeddings can then be \"queried\" using the search method. Matched embeddings contain contextually relevant metadata.",
-  "scripts": {
-    "lint": "eslint ./src/* --ext .ts",
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "npm run lint && rm -rf dist/lib && tsc && tsc --build tsconfig.es5.json && scp -rv ./README.md dist/"
-  },
+  "main": "lib/es5/index.js",
+  "module": "lib/es6/index.js",
+  "sideEffects": false,
   "repository": {
     "type": "git",
     "url": "git+https://github.com/AI-Refiner/refiner-js.git"

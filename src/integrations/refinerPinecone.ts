@@ -1,7 +1,10 @@
-import { PineconeClient } from "@pinecone-database/pinecone";
+import { PineconeClient, Vector } from "@pinecone-database/pinecone";
 
 export class RefinerPineconeClient {
-  constructor(apiKey, environment) {
+  private __apiKey: string;
+  environment: string;
+  client: PineconeClient;
+  constructor(apiKey: string, environment: string) {
     this.__apiKey = apiKey;
     this.environment = environment;
 
@@ -17,7 +20,12 @@ export class RefinerPineconeClient {
     });
   }
 
-  async createIndex(indexId, dimension = 1024) {
+  async describeIndex(indexId) {
+    const description = await this.client.describeIndex({ indexName: indexId });
+    return description;
+  }
+
+  async createIndex(indexId, dimension = 1536) {
     const index = await this.client.createIndex({
       createRequest: {
         name: indexId,
@@ -28,14 +36,11 @@ export class RefinerPineconeClient {
   }
 
   async storeEmbeddings(
-    vectors,
-    indexId,
-    namespace = null,
-    poolThreads = null
+    vectors: Vector[],
+    indexId: string,
+    namespace: string | undefined
   ) {
-    let index = this.client.Index(indexId, {
-      pool_threads: poolThreads,
-    });
+    const index = this.client.Index(indexId);
 
     const upsertRequest = {
       vectors: vectors,
@@ -49,12 +54,12 @@ export class RefinerPineconeClient {
     return response;
   }
 
-  async search(vectors, indexId, limit, namespace = null) {
+  async search(vectors: [], indexId: string, limit: number, namespace: string | undefined) {
     const index = this.client.Index(indexId);
 
     const queryRequest = {
       topK: limit,
-      vector: [vectors],
+      vector: vectors,
       namespace: namespace,
       includeValues: false,
       includeMetadata: true,

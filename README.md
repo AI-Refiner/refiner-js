@@ -51,7 +51,7 @@ const index = await indexes.createIndex("new-index");
 ```node
 const embeddings = new Embeddings("/path/to/.env");
 const item = [{ id: "2", text: "hello" }];
-embeddings.create(item, "test-index");
+embeddings.create(item as any, "test-index");
 // {'upserted_count': 1}
 ```
 
@@ -92,7 +92,7 @@ let data = await loader.getDocumentFromPDF(path);
 const embeddings = new Embeddings("/path/to/.env");
 let transformers = new Transformers();
 let texts = await transformers.splitText(data);
-let vectors = [];
+let vectors = [] as any;
 texts.map(async (item, index) => {
     // remove loc from metadata. It's not needed and throws a PineconeError when used.
     if ("loc" in item.metadata) delete item.metadata.loc;
@@ -120,7 +120,7 @@ const question = "What are the headlines of todays news?";
 let results = await embeddings.search(question, "test-index", 10);
 const openaiClient = new RefinerOpenAIClient("OPENAI_API_KEY");
 
-const document = results.matches.map((m) => m.metadata.pageContent).join("\n");
+const document = results.matches.map((m) => m.metadata?.pageContent).join("\n");
 
 const prompt = `
   Q: ${question}\n

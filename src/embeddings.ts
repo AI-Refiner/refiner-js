@@ -1,43 +1,46 @@
 import * as dotenv from "dotenv";
 import { RefinerOpenAIClient } from "./integrations/refinerOpenAI.js";
 import { RefinerPineconeClient } from "./integrations/refinerPinecone.js";
-import { Indexes } from "./indexes.js";
 
 export class Embeddings {
+  private __openaiApiKey: string | undefined;
+  private __pineconeApiKey: string | undefined;
+  pineconeEnvironmentName: string | undefined;
+  openaiADA200DefaultDimension: number;
   // Refiner class for creating, searching, updating, and deleting AI embeddings.
   // Embeddings are created using OpenAI. Uses Pinecone for storing and searching embeddings.
 
   constructor(
-    configFile,
-    openAiApiKey,
-    pineconeApiKey,
-    pineconeEnvironmentName
+    configFile?: string | undefined,
+    openAiApiKey?: string | undefined,
+    pineconeApiKey?: string | undefined,
+    pineconeEnvironmentName?: string | undefined
   ) {
     dotenv.config({ path: configFile });
 
-    this.__openaiApiKey = openAiApiKey || process.env.OPENAI_API_KEY;
-    this.__pineconeApiKey = pineconeApiKey || process.env.PINECONE_API_KEY;
+    this.__openaiApiKey = openAiApiKey ?? process.env.OPENAI_API_KEY;
+    this.__pineconeApiKey = pineconeApiKey ?? process.env.PINECONE_API_KEY;
     this.pineconeEnvironmentName =
-      pineconeEnvironmentName || process.env.PINECONE_ENVIRONMENT_NAME;
+      pineconeEnvironmentName ?? process.env.PINECONE_ENVIRONMENT_NAME;
 
     this.openaiADA200DefaultDimension = 1536;
   }
 
   __validateEnv() {
     // Validate that the environment variables are set.
-    if (!this.__openaiApiKey) {
+    if (this.__openaiApiKey == undefined) {
       return {
         error: "OPENAI_API_KEY is not set.",
       };
     }
 
-    if (!this.__pineconeApiKey) {
+    if (this.__pineconeApiKey == undefined) {
       return {
         error: "PINECONE_API_KEY is not set.",
       };
     }
 
-    if (!this.pineconeEnvironmentName) {
+    if (this.pineconeEnvironmentName == undefined) {
       return {
         error: "PINECONE_ENVIRONMENT_NAME is not set.",
       };
@@ -59,7 +62,7 @@ export class Embeddings {
     }
   }
 
-  async create(payload, indexName, namespace = null, poolThreads = null) {
+  async create(payload: [], indexName: string, namespace?: string | undefined) {
     const validatedEnv = this.__validateEnv();
     if (validatedEnv && "error" in validatedEnv) {
       return validatedEnv;
@@ -71,22 +74,22 @@ export class Embeddings {
     }
 
     const pineconeClient = new RefinerPineconeClient(
-      this.__pineconeApiKey,
-      this.pineconeEnvironmentName
+      this.__pineconeApiKey as string,
+      this.pineconeEnvironmentName as string
     );
 
     await pineconeClient.init();
 
     const openaiClient = new RefinerOpenAIClient(this.__openaiApiKey);
 
-    let embeddings;
+    let embeddings: number[];
 
-    let vectors = [];
+    const vectors:{ id: string, values: number[], metadata: object }[] = [];
 
-    const promises = payload.map(async (item) => {
+    const promises = payload.map(async (item:{id: string, text: string, metadata:object}) => {
       embeddings = await openaiClient.createEmbeddings(item.text);
       vectors.push({
-        id: item.id || uuidv4(),
+        id: item.id ?? uuidv4(),
         values: embeddings,
         metadata: item.metadata,
       });
@@ -95,24 +98,23 @@ export class Embeddings {
     await Promise.all(promises);
 
     const stored = await pineconeClient.storeEmbeddings(
-      vectors,
+      vectors as [],
       indexName,
       namespace,
-      poolThreads
     );
 
-    return vectors, stored;
+    return stored;
   }
 
-  async search(query, indexId, limit, namespace = null) {
+  async search(query: string, indexId: string, limit: string | number, namespace?: string | undefined) {
     const validatedEnv = this.__validateEnv();
     if (validatedEnv && "error" in validatedEnv) {
       return validatedEnv;
     }
 
     const pineconeClient = new RefinerPineconeClient(
-      this.__pineconeApiKey,
-      this.pineconeEnvironmentName
+      this.__pineconeApiKey as string,
+      this.pineconeEnvironmentName as string
     );
 
     await pineconeClient.init();
@@ -120,12 +122,15 @@ export class Embeddings {
     const openaiClient = new RefinerOpenAIClient(this.__openaiApiKey);
     const embeddings = await openaiClient.createEmbeddings(query);
     const results = await pineconeClient.search(
-      embeddings,
+      embeddings as [],
       indexId,
-      limit,
+      limit as number,
       namespace
     );
 
     return results;
   }
+}
+function uuidv4(): undefined {
+  throw new Error("Function not implemented.");
 }

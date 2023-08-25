@@ -2,53 +2,39 @@ import * as dotenv from "dotenv";
 import { RefinerPineconeClient } from "./integrations/refinerPinecone.js";
 
 export class Indexes {
+  private __pineconeApiKey: string | undefined;
+  pineconeEnvironmentName: string | undefined;
+  openaiADA200DefaultDimension: number;
   // Refiner class for creating indexes and storing embeddings.
 
-  constructor(
-    configFile,
-    openAiApiKey,
-    pineconeApiKey,
-    pineconeEnvironmentName
-  ) {
+  constructor(configFile: string | undefined, pineconeApiKey: string | undefined, pineconeEnvironmentName: string | undefined) {
     dotenv.config({ path: configFile });
 
-    this.__openaiApiKey = openAiApiKey || process.env.OPENAI_API_KEY;
-    this.__pineconeApiKey = pineconeApiKey || process.env.PINECONE_API_KEY;
+    this.__pineconeApiKey = pineconeApiKey ?? process.env.PINECONE_API_KEY;
     this.pineconeEnvironmentName =
-      pineconeEnvironmentName || process.env.PINECONE_ENVIRONMENT_NAME;
+      pineconeEnvironmentName ?? process.env.PINECONE_ENVIRONMENT_NAME;
 
     this.openaiADA200DefaultDimension = 1536;
   }
 
   __validateEnv() {
-    // Validate that the environment variables are set.
-    if (!this.__openaiApiKey) {
-      return {
-        error: "OPENAI_API_KEY is not set.",
-      };
-    }
-
-    if (!this.__pineconeApiKey) {
+    if (this.__pineconeApiKey == undefined) {
       return {
         error: "PINECONE_API_KEY is not set.",
       };
     }
 
-    if (!this.pineconeEnvironmentName) {
+    if (this.pineconeEnvironmentName == undefined) {
       return {
         error: "PINECONE_ENVIRONMENT_NAME is not set.",
       };
     }
   }
 
-  async __validatePayload(payload) {
-    //
-  }
-
-  async create(indexName, dimension = this.openaiADA200DefaultDimension) {
+  async create(indexName: string, dimension = this.openaiADA200DefaultDimension) {
     const pineconeClient = new RefinerPineconeClient(
-      this.__pineconeApiKey,
-      this.pineconeEnvironmentName
+      this.__pineconeApiKey as string,
+      this.pineconeEnvironmentName as string
     );
 
     await pineconeClient.init();
@@ -73,4 +59,24 @@ export class Indexes {
     }
     return { error: "Index already exists." };
   }
+
+  async describeIndex(indexName: string) {
+    const pineconeClient = new RefinerPineconeClient(
+      this.__pineconeApiKey as string,
+      this.pineconeEnvironmentName as string
+    );
+
+    await pineconeClient.init();
+
+    // check if index exists
+    const indexes = await pineconeClient.client.listIndexes();
+
+    if (!indexes.includes(indexName)) {
+      return { error: "Index does not exist." };
+    }
+
+    const description = await pineconeClient.describeIndex(indexName);
+    return description;
+  }
 }
+

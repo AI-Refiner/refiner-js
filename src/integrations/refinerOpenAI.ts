@@ -1,12 +1,13 @@
 import { Configuration, OpenAIApi } from "openai";
 
 export class RefinerOpenAIClient {
-  constructor(apiKey) {
+  openai: OpenAIApi;
+  constructor(apiKey: string | undefined) {
     const configuration = new Configuration({ apiKey });
     this.openai = new OpenAIApi(configuration);
   }
 
-  async createEmbeddings(payload) {
+  async createEmbeddings(payload: string) {
     const response = await this.openai.createEmbedding({
       model: "text-embedding-ada-002",
       input: payload,

@@ -1,11 +1,15 @@
 {
   "type": "module",
   "name": "@ai-refiner/refiner-js",
-  "version": "0.2.0",
-  "description": "The Refiner Javascript package can be used to load and store text and metadata as vector embeddings. Embeddings are generated using OpenAI and stored as vectors in Pinecone. Stored embeddings can then be \"queried\" using the search method. Matched embeddings contain contextually relevant metadata.",
-  "main": "src/index.js",
+  "version": "0.2.2",
+  "description": "The Refiner Typescript package can be used to load and store text and metadata as vector embeddings. Embeddings are generated using OpenAI and stored as vectors in Pinecone. Stored embeddings can then be \"queried\" using the search method. Matched embeddings contain contextually relevant metadata.",
+  "main": "lib/es5/index.js",
+  "module": "lib/es6/index.js",
+  "sideEffects": false,
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "lint": "eslint ./src/* --ext .ts",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "npm run lint && rm -rf dist/lib && tsc && tsc --build tsconfig.es5.json"
   },
   "repository": {
     "type": "git",
@@ -25,5 +29,12 @@
     "openai": "^3.3.0",
     "pdf-parse": "^1.1.1",
     "uuid": "^9.0.0"
+  },
+  "devDependencies": {
+    "@types/jest": "^29.5.4",
+    "@typescript-eslint/eslint-plugin": "^6.4.1",
+    "@typescript-eslint/parser": "^6.4.1",
+    "eslint": "^8.47.0",
+    "typescript": "^5.2.2"
   }
 }

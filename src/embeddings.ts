@@ -2,6 +2,12 @@ import * as dotenv from "dotenv";
 import { RefinerOpenAIClient } from "./integrations/refinerOpenAI.js";
 import { RefinerPineconeClient } from "./integrations/refinerPinecone.js";
 
+interface PayloadItem {
+  id: string;
+  text: string;
+  metadata: object;
+}
+
 export class Embeddings {
   private __openaiApiKey: string | undefined;
   private __pineconeApiKey: string | undefined;
@@ -47,7 +53,7 @@ export class Embeddings {
     }
   }
 
-  async __validatePayload(payload) {
+  async __validatePayload(payload: PayloadItem[]) {
     // Validate the payload is an array of objects with text
     if (!Array.isArray(payload)) {
       return {
@@ -62,7 +68,7 @@ export class Embeddings {
     }
   }
 
-  async create(payload: [], indexName: string, namespace?: string | undefined) {
+  async create(payload: PayloadItem[], indexName: string, namespace?: string | undefined) {
     const validatedEnv = this.__validateEnv();
     if (validatedEnv && "error" in validatedEnv) {
       return validatedEnv;

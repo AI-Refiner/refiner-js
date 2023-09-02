@@ -22,7 +22,7 @@ export OPENAI_API_KEY="API_KEY"
 
 or you can create a `.env` (dotenv) config file and pass in the file path when initializing the Embeddings class:
 
-```node
+```typescript
 import { Embeddings } from "@ai-refiner/refiner-js";
 const embeddings = new Embeddings("/path/to/.env");
 ```
@@ -37,7 +37,7 @@ OPENAI_API_KEY="API_KEY"
 
 ## Create Index
 
-```node
+```typescript
 const indexes = new Indexes("./.env");
 const index = await indexes.createIndex("new-index");
 // creating index: new-index
@@ -48,16 +48,18 @@ const index = await indexes.createIndex("new-index");
 
 ## Create Embeddings
 
-```node
+```typescript
 const embeddings = new Embeddings("/path/to/.env");
-const item = [{ id: "2", text: "hello" }];
-embeddings.create(item as any, "test-index");
+const payload: PayloadItem[] = [
+  { id: "1", text: "hello world", metadata: { key: "value" } },
+];
+embeddings.create(payload, "test-index");
 // {'upserted_count': 1}
 ```
 
 ## Semantic Search
 
-```node
+```typescript
 const embeddings = new Embeddings("/path/to/.env");
 const limit = 10;
 embeddings.search("hello", "test-index", limit);
@@ -66,7 +68,7 @@ embeddings.search("hello", "test-index", limit);
 
 ## Loaders - getDocumentFromURL
 
-```node
+```typescript
 // Get web page content from a URL and create a document.
 let loaders = new Loaders();
 let data = await loaders.getDocumentFromURL("https://news.yahoo.com/");
@@ -77,7 +79,7 @@ let data = await loaders.getDocumentFromURL("https://news.yahoo.com/");
 
 ## Loaders - getDocumentFromPDF
 
-```node
+```typescript
 // Get web page content from a PDF filepath or blob and create a document.
 let path = "/path/to/PDF/example.pdf";
 let data = await loader.getDocumentFromPDF(path);
@@ -87,7 +89,7 @@ let data = await loader.getDocumentFromPDF(path);
 
 ## Transformers
 
-```node
+```typescript
 // Split the document text and create embeddings
 const embeddings = new Embeddings("/path/to/.env");
 let transformers = new Transformers();
@@ -112,7 +114,7 @@ const created = await embeddings.create(vectors, "test-index");
 
 ## Document Chatbot Example
 
-```node
+```typescript
 // Ask the document questions. Format a Q/A style prompt.
 // Stream the completion results
 const question = "What are the headlines of todays news?";

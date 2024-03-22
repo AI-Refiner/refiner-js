@@ -1,13 +1,14 @@
 import * as dotenv from "dotenv";
-import { RefinerPineconeClient } from "./integrations/refinerPinecone.js";
+import { RefinerPineconeClient } from "@/integrations/refinerPinecone";
 
 export class Indexes {
+  // Refiner class for creating indexes and storing embeddings.
+
   private __pineconeApiKey: string | undefined;
   pineconeEnvironmentName: string | undefined;
   openaiADA200DefaultDimension: number;
-  // Refiner class for creating indexes and storing embeddings.
 
-  constructor(configFile: string | undefined, pineconeApiKey: string | undefined, pineconeEnvironmentName: string | undefined) {
+  constructor(configFile?: string, pineconeApiKey?: string, pineconeEnvironmentName?: string) {
     dotenv.config({ path: configFile });
 
     this.__pineconeApiKey = pineconeApiKey ?? process.env.PINECONE_API_KEY;

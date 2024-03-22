@@ -1,28 +1,20 @@
-import { Configuration, CreateChatCompletionRequest, OpenAIApi } from "openai";
+import OpenAI from 'openai';
+import { ChatCompletionCreateParams, EmbeddingCreateParams } from 'openai/resources';
 
 export class RefinerOpenAIClient {
-  openai: OpenAIApi;
+  openai: OpenAI;
   constructor(apiKey: string | undefined) {
-    const configuration = new Configuration({ apiKey });
-    this.openai = new OpenAIApi(configuration);
+    this.openai = new OpenAI({ apiKey });
   }
 
-  async createEmbeddings(payload: string) {
-    const response = await this.openai.createEmbedding({
-      model: "text-embedding-ada-002",
-      input: payload,
-    });
+  async createEmbeddings(payload: EmbeddingCreateParams) {
+    const response = await this.openai.embeddings.create(payload as EmbeddingCreateParams);
 
-    return response.data.data[0].embedding;
+    return response.data[0].embedding;
   }
 
-  async createCompletion(payload: CreateChatCompletionRequest) {
-    const completion = await this.openai.createChatCompletion(payload, {
-      responseType: "stream",
-    });
-
-    const stream = completion.data;
-
-    return stream;
+  async createCompletion(payload: ChatCompletionCreateParams) {
+    const completion = await this.openai.chat.completions.create(payload as ChatCompletionCreateParams);
+    return completion;
   }
 }

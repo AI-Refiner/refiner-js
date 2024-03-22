@@ -1,6 +1,7 @@
 import * as dotenv from "dotenv";
-import { RefinerOpenAIClient } from "./integrations/refinerOpenAI.js";
-import { RefinerPineconeClient } from "./integrations/refinerPinecone.js";
+import { RefinerOpenAIClient } from "@/integrations/refinerOpenAI";
+import { RefinerPineconeClient } from "@/integrations/refinerPinecone";
+import { EmbeddingCreateParams } from 'openai/resources';
 
 interface PayloadItem {
   id: string;
@@ -9,12 +10,14 @@ interface PayloadItem {
 }
 
 export class Embeddings {
+  // Refiner class for creating, searching, updating, and deleting AI embeddings.
+  // Embeddings are created using OpenAI. Uses Pinecone for storing and searching embeddings.
+
   private __openaiApiKey: string | undefined;
   private __pineconeApiKey: string | undefined;
   pineconeEnvironmentName: string | undefined;
   openaiADA200DefaultDimension: number;
-  // Refiner class for creating, searching, updating, and deleting AI embeddings.
-  // Embeddings are created using OpenAI. Uses Pinecone for storing and searching embeddings.
+  embdeddingModel: string;
 
   constructor(
     configFile?: string | undefined,
@@ -29,7 +32,8 @@ export class Embeddings {
     this.pineconeEnvironmentName =
       pineconeEnvironmentName ?? process.env.PINECONE_ENVIRONMENT_NAME;
 
-    this.openaiADA200DefaultDimension = 1536;
+    this.openaiADA200DefaultDimension = Number(process.env.OPENAI_ADA_200_DEFAULT_DIMENSION) ?? 1536;
+    this.embdeddingModel = process.env.OPENAI_TEXT_EMBEDDING_MODEL ?? "text-embedding-ada-002";
   }
 
   __validateEnv() {
@@ -93,7 +97,11 @@ export class Embeddings {
     const vectors:{ id: string, values: number[], metadata: object }[] = [];
 
     const promises = payload.map(async (item:{id: string, text: string, metadata:object}) => {
-      embeddings = await openaiClient.createEmbeddings(item.text);
+      const embeddingPayload: EmbeddingCreateParams = {
+        input: item.text,
+        model: this.embdeddingModel
+      };      
+      embeddings = await openaiClient.createEmbeddings(embeddingPayload);
       vectors.push({
         id: item.id ?? uuidv4(),
         values: embeddings,
@@ -126,7 +134,11 @@ export class Embeddings {
     await pineconeClient.init();
 
     const openaiClient = new RefinerOpenAIClient(this.__openaiApiKey);
-    const embeddings = await openaiClient.createEmbeddings(query);
+    const embeddingPayload: EmbeddingCreateParams = {
+      input: query,
+      model: this.embdeddingModel 
+    };          
+    const embeddings = await openaiClient.createEmbeddings(embeddingPayload);
     const results = await pineconeClient.search(
       embeddings as [],
       indexId,

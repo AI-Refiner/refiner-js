@@ -1,6 +1,6 @@
 import * as dotenv from "dotenv";
-import { RefinerOpenAIClient } from "@/integrations/refinerOpenAI";
-import { RefinerPineconeClient } from "@/integrations/refinerPinecone";
+import { RefinerOpenAIClient } from "./integrations/refinerOpenAI.js";
+import { RefinerPineconeClient } from "./integrations/refinerPinecone.js";
 import { EmbeddingCreateParams } from 'openai/resources';
 
 interface PayloadItem {

@@ -1,5 +1,5 @@
 import * as dotenv from "dotenv";
-import { RefinerPineconeClient } from "@/integrations/refinerPinecone";
+import { RefinerPineconeClient } from "./integrations/refinerPinecone.js";
 
 export class Indexes {
   // Refiner class for creating indexes and storing embeddings.

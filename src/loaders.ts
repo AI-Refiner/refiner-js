@@ -1,4 +1,4 @@
-import { RefinerLangchainClient } from "@/integrations/refinerLangchain";
+import { RefinerLangchainClient } from "./integrations/refinerLangchain.js";
 export class Loaders {
   loader: RefinerLangchainClient;
   constructor() {
